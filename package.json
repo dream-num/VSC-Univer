@@ -16,8 +16,12 @@
   "contributes": {
     "commands": [
       {
-        "command": "vs-univer.Univer",
-        "title": "Hello Univer"
+        "command": "vs-univer.Sheets",
+        "title": "Univer Sheets"
+      },
+      {
+        "command": "vs-univer.Docs",
+        "title": "Univer Docs"
       }
     ]
   },
