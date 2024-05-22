@@ -12,7 +12,9 @@
   "engines": {
     "vscode": "^1.88.0"
   },
-  "activationEvents": [],
+  "activationEvents": [
+    "onWebviewPanel:univerSheets"
+  ],
   "contributes": {
     "commands": [
       {
