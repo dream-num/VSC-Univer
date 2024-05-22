@@ -1,15 +1,9 @@
 import * as fs from 'node:fs'
 import * as path from 'node:path'
 import * as vscode from 'vscode'
+import * as xlsx from 'xlsx'
 
 export function activate(context: vscode.ExtensionContext) {
-  //  make a legacy state
-  // vscode.window.registerWebviewPanelSerializer('univerSheets', {
-  //   async deserializeWebviewPanel(webviewPanel: vscode.WebviewPanel, state: any) {
-  //     webviewPanel.webview.html = getWebviewContent(context, webviewPanel, 'sheets')
-  //   },
-  // })
-
   context.subscriptions.push(
     vscode.commands.registerCommand('vs-univer.Sheets', () => {
       const panel = vscode.window.createWebviewPanel(
@@ -51,6 +45,44 @@ export function activate(context: vscode.ExtensionContext) {
       panel.webview.html = getWebviewContent(context, panel, 'docs')
 
       setupMessageListener(panel)
+    }),
+  )
+
+  context.subscriptions.push(
+    vscode.commands.registerCommand('vs-univer.LoadExcel', async () => {
+      const options: vscode.OpenDialogOptions = {
+        canSelectMany: false,
+        openLabel: 'Open',
+        filters: {
+          'Excel Files': ['xlsx'],
+        },
+      }
+
+      const fileUri = await vscode.window.showOpenDialog(options)
+      if (fileUri && fileUri[0]) {
+        try {
+          const buffer = fs.readFileSync(fileUri[0].fsPath)
+          const workbook = xlsx.read(buffer, { type: 'buffer' })
+          const sheetName = workbook.SheetNames[0]
+          const sheet = workbook.Sheets[sheetName]
+          const data = xlsx.utils.sheet_to_json(sheet, { header: 1 })
+
+          const panel = vscode.window.createWebviewPanel(
+            'univerExcel',
+            'univer-excel',
+            vscode.ViewColumn.One,
+            {
+              enableScripts: true,
+              // localResourceRoots: [vscode.Uri.file(context.extensionPath)],
+            },
+          )
+
+          panel.webview.html = getWebviewXlsx(data)
+        }
+        catch (error) {
+          vscode.window.showErrorMessage('Failed to load excel file!')
+        }
+      }
     }),
   )
 }
@@ -97,7 +129,7 @@ function getWebviewContent(context: vscode.ExtensionContext, panel: vscode.Webvi
   const faviconUri = webview.asWebviewUri(faviconPath)
 
   return `
-  <!DOCTYPE html>
+    <!DOCTYPE html>
     <html lang="en">
         <head>
             <meta charset="utf-8" />
@@ -135,6 +167,21 @@ function getWebviewContent(context: vscode.ExtensionContext, panel: vscode.Webvi
         </script>
         </body>
     </html>
+  `
+}
+
+function getWebviewXlsx(data: any) {
+  return `
+  <!DOCTYPE html>
+  <html lang="en">
+  <head>
+      <meta charset="utf-8">
+      <title>Excel Data</title>
+  </head>
+  <body>
+      <pre>${JSON.stringify(data, null, 2)}</pre>
+  </body>
+  </html>
   `
 }
 
