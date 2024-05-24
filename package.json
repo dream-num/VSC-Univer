@@ -24,10 +24,6 @@
       {
         "command": "vs-univer.Docs",
         "title": "Univer Docs"
-      },
-      {
-        "command": "vs-univer.LoadExcel",
-        "title": "Univer LoadExcel"
       }
     ]
   },
@@ -42,9 +38,6 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "test": "vscode-test"
-  },
-  "dependencies": {
-    "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^2.15.0",
