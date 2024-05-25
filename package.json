@@ -37,7 +37,8 @@
     "pretest": "npm run compile-tests && npm run compile && npm run lint",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
-    "test": "vscode-test"
+    "test": "vscode-test",
+    "prepare": "simple-git-hooks"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^2.15.0",
@@ -52,15 +53,16 @@
     "esbuild": "^0.20.2",
     "eslint": "^8.57.0",
     "lint-staged": "^15.2.2",
+    "simple-git-hooks": "^2.11.1",
     "ts-loader": "^9.5.1",
     "typescript": "^5.3.3",
     "webpack": "^5.91.0",
     "webpack-cli": "^5.1.4"
   },
   "simple-git-hooks": {
-    "pre-commit": "npm lint-staged"
+    "pre-commit": "npx lint-staged"
   },
   "lint-staged": {
-    "*": "eslint --fix"
+    "*.{ts, json}": "eslint --fix"
   }
 }
