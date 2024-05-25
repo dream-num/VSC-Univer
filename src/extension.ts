@@ -1,6 +1,5 @@
-import * as fs from 'node:fs'
-import * as path from 'node:path'
 import * as vscode from 'vscode'
+import { saveContentToFile } from './utils/file'
 
 export function activate(context: vscode.ExtensionContext) {
   context.subscriptions.push(
@@ -50,15 +49,8 @@ export function activate(context: vscode.ExtensionContext) {
 
 function setupMessageListener(panel: vscode.WebviewPanel) {
   panel.webview.onDidReceiveMessage((message) => {
-    if (message.command === 'saveContent') {
-      const filePath = path.join(vscode.workspace.rootPath ?? '', 'savedContent.html')
-      fs.writeFile(filePath, message.content, (err) => {
-        if (err)
-          vscode.window.showErrorMessage('Failed to save file!')
-        else
-          vscode.window.showInformationMessage('File saved successfully!')
-      })
-    }
+    if (message.command === 'saveAsExcel')
+      saveContentToFile(message.content, 'univer-sheet.xlsx')
   })
 }
 
@@ -79,6 +71,13 @@ function getWebviewContent(context: vscode.ExtensionContext, panel: vscode.Webvi
     'main.js',
   )
 
+  const wasmJsPath = vscode.Uri.joinPath(
+    context.extensionUri,
+    'media',
+    'sheets',
+    'wasm.js',
+  )
+
   const faviconPath = vscode.Uri.joinPath(
     context.extensionUri,
     'media',
@@ -88,8 +87,10 @@ function getWebviewContent(context: vscode.ExtensionContext, panel: vscode.Webvi
   const mainCssUri = webview.asWebviewUri(mainCssPath)
   const mainJsUri = webview.asWebviewUri(mainJsPath)
   const faviconUri = webview.asWebviewUri(faviconPath)
+  const wasmJsUri = webview.asWebviewUri(wasmJsPath)
 
-  return `
+  const sheetsHtml
+  = `
     <!DOCTYPE html>
     <html lang="en">
         <head>
@@ -111,17 +112,17 @@ function getWebviewContent(context: vscode.ExtensionContext, panel: vscode.Webvi
         <body style="overflow: hidden">
             <div id="app" style="height: 100%"></div>
             <script src="${mainJsUri}"></script>
-
+            <script src="${wasmJsUri}"></script>
             <script>
             const vscode = acquireVsCodeApi();
 
-            document.addEventListener('keydown', (event) => {
+            document.addEventListener('keydown',async (event) => {
               if (event.ctrlKey && event.key === 's') {
                   event.preventDefault(); 
-                  const iframeContent = document.getElementById('app').innerHTML;
+                  const excelBuffer = await window.univerSheetSave()
                   vscode.postMessage({
-                      command: 'saveContent',
-                      content: iframeContent
+                      command: 'saveAsExcel',
+                      content: excelBuffer
                   });
               }
             });
@@ -129,6 +130,35 @@ function getWebviewContent(context: vscode.ExtensionContext, panel: vscode.Webvi
         </body>
     </html>
   `
+
+  const docsHtml
+   = `
+    <!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <meta charset="utf-8" />
+            <meta content="width=device-width, initial-scale=1" name="viewport" />
+            <title>univer ${targetFile}</title>
+
+            <link rel="icon" type="image/x-icon" href="${faviconUri}" />
+            <link rel="stylesheet" href="${mainCssUri}" />
+            <style>
+                html,
+                body {
+                    height: 100%;
+                    margin: 0;
+                }
+            </style>
+        </head>
+
+        <body style="overflow: hidden">
+            <div id="app" style="height: 100%"></div>
+            <script src="${mainJsUri}"></script>
+        </body>
+    </html>
+  `
+
+  return type === 'sheets' ? sheetsHtml : docsHtml
 }
 
 export function deactivate() {}
