@@ -24,8 +24,20 @@
       {
         "command": "vs-univer.Docs",
         "title": "Univer Docs"
+      },
+      {
+        "command": "vs-univer.OpenExcel",
+        "title": "Open with Univer"
       }
-    ]
+    ],
+    "menus": {
+      "explorer/context": [
+        {
+          "command": "vs-univer.OpenExcel",
+          "group": "navigation"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run package",
