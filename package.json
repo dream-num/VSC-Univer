@@ -1,14 +1,22 @@
 {
   "publisher": "Univer",
-  "name": "vs-univer",
-  "displayName": "VS-Univer",
-  "version": "0.0.1",
+  "name": "univer",
+  "displayName": "Univer",
+  "version": "0.0.2",
   "description": "",
+  "author": "DreamNum Inc. <developer@univer.ai>",
+  "license": "Apache-2.0",
+  "funding": {
+    "type": "opencollective",
+    "url": "https://opencollective.com/univer"
+  },
+  "homepage": "https://univer.ai",
   "repository": "https://github.com/karlsbeard/VS-Univer",
   "categories": [
     "Other"
   ],
   "main": "./dist/extension.js",
+  "icon": "./media/univer.jpg",
   "engines": {
     "vscode": "^1.88.0"
   },
