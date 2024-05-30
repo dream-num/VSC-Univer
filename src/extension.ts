@@ -191,7 +191,7 @@ function getWebviewContent(context: vscode.ExtensionContext, panel: vscode.Webvi
               
 
               document.addEventListener('keydown',async (event) => {
-                if (event.ctrlKey && event.key === 's') {
+                if ((event.ctrlKey || event.metaKey) && event.key === 's') {
                     event.preventDefault(); 
                     const excelBuffer = await window.univerSheetSave()
                     vscode.postMessage({

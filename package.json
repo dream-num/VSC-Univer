@@ -2,8 +2,8 @@
   "publisher": "Univer",
   "name": "univer",
   "displayName": "Univer",
-  "version": "0.0.2",
-  "description": "",
+  "version": "0.0.4",
+  "description": "Create, edit, and view spreadsheets and documents with Univer",
   "author": "DreamNum Inc. <developer@univer.ai>",
   "license": "Apache-2.0",
   "funding": {
@@ -16,12 +16,11 @@
     "Other"
   ],
   "main": "./dist/extension.js",
-  "icon": "./media/univer.jpg",
+  "icon": "./media/univer.png",
   "engines": {
-    "vscode": "^1.88.0"
+    "vscode": "^1.83.0"
   },
   "activationEvents": [
-    "onWebviewPanel:univerSheets"
   ],
   "contributes": {
     "commands": [
@@ -64,7 +63,7 @@
     "@antfu/eslint-config": "^2.15.0",
     "@types/mocha": "^10.0.6",
     "@types/node": "18.x",
-    "@types/vscode": "^1.88.0",
+    "@types/vscode": "1.83.0",
     "@typescript-eslint/eslint-plugin": "^7.4.0",
     "@typescript-eslint/parser": "^7.4.0",
     "@vscode/test-cli": "^0.0.8",
