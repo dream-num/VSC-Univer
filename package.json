@@ -2,7 +2,7 @@
   "publisher": "Univer",
   "name": "univer",
   "displayName": "Univer",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "Create, edit, and view spreadsheets and documents with Univer",
   "author": "DreamNum Inc. <developer@univer.ai>",
   "license": "Apache-2.0",
@@ -12,35 +12,113 @@
   },
   "homepage": "https://univer.ai",
   "repository": "https://github.com/karlsbeard/VS-Univer",
+  "keywords": [
+    "Doc",
+    "Excel",
+    "spreadsheet",
+    "Univer",
+    "vscode"
+  ],
   "categories": [
     "Other"
   ],
   "main": "./dist/extension.js",
+  "browser": "./dist/extension.js",
+  "capabilities": {
+    "untrustedWorkspaces": {
+      "supported": true
+    },
+    "virtualWorkspaces": true
+  },
   "icon": "./media/univer.png",
   "engines": {
     "vscode": "^1.83.0"
   },
   "activationEvents": [
+    "onLanguage:excel",
+    "onWebviewPanel:univer-sheet-preview"
   ],
   "contributes": {
+    "customEditors": [
+      {
+        "viewType": "univer-excel-editor",
+        "displayName": "Excel Editor",
+        "priority": "default",
+        "selector": [
+          {
+            "filenamePattern": "*.xlsx"
+          },
+          {
+            "filenamePattern": "*.xlsm"
+          },
+          {
+            "filenamePattern": "*.xls"
+          }
+        ]
+      }
+    ],
+    "languages": [
+      {
+        "id": "excel",
+        "extensions": [
+          ".xlsx",
+          ".xlsm",
+          ".xls"
+        ],
+        "aliases": [
+          "Excel",
+          "spreadsheet",
+          "excel",
+          "univer"
+        ]
+      },
+      {
+        "id": "doc",
+        "extensions": [
+          ".docx",
+          ".doc"
+        ],
+        "aliases": [
+          "Doc",
+          "doc",
+          "document",
+          "univer"
+        ]
+      }
+    ],
     "commands": [
       {
         "command": "vs-univer.Sheets",
-        "title": "Univer Sheets"
+        "title": "Create Sheets with Univer"
       },
       {
         "command": "vs-univer.Docs",
-        "title": "Univer Docs"
+        "title": "Create Docs with Univer"
       },
       {
-        "command": "vs-univer.OpenExcel",
-        "title": "Open with Univer"
+        "command": "vs-univer.excelPreview",
+        "title": "Preview Excel with Univer"
       }
     ],
     "menus": {
       "explorer/context": [
         {
-          "command": "vs-univer.OpenExcel",
+          "when": "resourceLangId == excel",
+          "command": "vs-univer.excelPreview",
+          "group": "navigation"
+        }
+      ],
+      "editor/title": [
+        {
+          "when": "resourceLangId == excel",
+          "command": "vs-univer.excelPreview",
+          "group": "navigation"
+        }
+      ],
+      "editor/title/context": [
+        {
+          "when": "resourceLangId == excel",
+          "command": "vs-univer.excelPreview",
           "group": "navigation"
         }
       ]
@@ -58,6 +136,9 @@
     "lint:fix": "eslint . --fix",
     "test": "vscode-test",
     "prepare": "simple-git-hooks"
+  },
+  "dependencies": {
+    "vscode-uri": "^3.0.8"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^2.15.0",
