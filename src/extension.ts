@@ -1,118 +1,109 @@
-import * as vscode from 'vscode'
-import { isExcelFile, readExcelFile, saveContentToFile } from './utils/file'
+import type { ExtensionContext, WebviewPanel } from 'vscode'
+import { Uri, ViewColumn, commands, window } from 'vscode'
+import { saveContentToFile } from './utils/file'
+import { documentViewManager } from './univerSheet/documentViewManager'
+import ExcelDocumentView from './univerSheet/excelDocumentView'
+import { ExcelEditorProvider } from './univerSheet/excelEditor'
 
-export function activate(context: vscode.ExtensionContext) {
-  context.subscriptions.push(
-    vscode.commands.registerCommand('vs-univer.Sheets', () => {
-      const panel = vscode.window.createWebviewPanel(
-        'univerSheets',
-        'univer-sheets',
-        vscode.ViewColumn.One,
-        {
-          enableScripts: true,
-          localResourceRoots: [vscode.Uri.file(context.extensionPath)],
-        },
-      )
+export function activate(context: ExtensionContext) {
+  const univerSheetCommand = commands.registerCommand('vs-univer.Sheets', () => {
+    const panel = window.createWebviewPanel(
+      'univerSheets',
+      'univer-sheets',
+      ViewColumn.One,
+      {
+        enableScripts: true,
+        localResourceRoots: [Uri.file(context.extensionPath)],
+      },
+    )
 
-      panel.webview.html = getWebviewContent(context, panel, 'sheets')
+    panel.webview.html = getWebviewContent(context, panel, 'sheets')
 
-      const fileName = `${+new Date()}.xlsx`
-      setupMessageListener(panel, fileName)
+    const fileName = `${+new Date()}.xlsx`
+    setupMessageListener(panel, fileName)
 
-      panel.onDidDispose(
-        () => {
-          panel.dispose()
-        },
-        null,
-        context.subscriptions,
-      )
-    }),
-  )
+    panel.onDidDispose(
+      () => {
+        panel.dispose()
+      },
+      null,
+      context.subscriptions,
+    )
+  })
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand('vs-univer.Docs', () => {
-      const panel = vscode.window.createWebviewPanel(
-        'univerDocs',
-        'univer-docs',
-        vscode.ViewColumn.One,
-        {
-          enableScripts: true,
-          localResourceRoots: [vscode.Uri.file(context.extensionPath)],
-        },
-      )
+  const univerDocCommand = commands.registerCommand('vs-univer.Docs', () => {
+    const panel = window.createWebviewPanel(
+      'univerDocs',
+      'univer-docs',
+      ViewColumn.One,
+      {
+        enableScripts: true,
+        localResourceRoots: [Uri.file(context.extensionPath)],
+      },
+    )
 
-      panel.webview.html = getWebviewContent(context, panel, 'docs')
-    }),
-  )
+    panel.webview.html = getWebviewContent(context, panel, 'docs')
+  })
 
-  context.subscriptions.push(
-    vscode.commands.registerCommand('vs-univer.OpenExcel', async (uri: vscode.Uri) => {
-      if (uri && uri.fsPath && isExcelFile(uri)) {
-        vscode.window.showInformationMessage('Opening Excel file...')
-        const pathAry = uri.fsPath.split('\\')
-        const fileName = pathAry[pathAry.length - 1]
-        const panel = vscode.window.createWebviewPanel(
-          'univerExcel',
-          fileName,
-          vscode.ViewColumn.One,
-          {
-            enableScripts: true,
-            localResourceRoots: [vscode.Uri.file(context.extensionPath)],
-          },
-        )
-        const excelBuffer = await readExcelFile(uri)
+  const univerPreviewCommand = commands.registerCommand('vs-univer.excelPreview', async (uri: Uri) => {
+    const resource = uri
+    const viewColumn = getViewColumn()
+    if (!(resource instanceof Uri)) {
+      window.showInformationMessage('Please use the explorer context menu or editor title menu to preview Excel files.')
+    }
 
-        panel.webview.html = getWebviewContent(context, panel, 'sheets', excelBuffer)
+    const excel = resource.with({ scheme: 'univer-sheet-preview' })
+    let preview = documentViewManager.find(excel)
+    if (preview) {
+      preview.reveal()
+      return
+    }
+    preview = await ExcelDocumentView.create(context, resource, viewColumn)
+    return preview.webview
+  })
 
-        setupMessageListener(panel, fileName, uri.fsPath)
+  context.subscriptions.push(univerSheetCommand)
+  context.subscriptions.push(univerDocCommand)
+  context.subscriptions.push(univerPreviewCommand)
+  context.subscriptions.push(ExcelEditorProvider.register(context))
 
-        panel.onDidDispose(
-          () => {
-            panel.dispose()
-          },
-          null,
-          context.subscriptions,
-        )
-      }
-      else {
-        vscode.window.showWarningMessage('Selected file is not an Excel file')
-      }
-    }),
-  )
+  // TODO: add the save state feature
+  // window.registerWebviewPanelSerializer('univer-excelviewer-excel', new LegacySerializer(context))
+  // window.registerWebviewPanelSerializer('univer-excelviewer-excel-preview', new ExcelSerializer(context))
 }
 
-function setupMessageListener(panel: vscode.WebviewPanel, fileName: string, fsPath?: string) {
+export function setupMessageListener(panel: WebviewPanel, fileName: string, fsPath?: string) {
   panel.webview.onDidReceiveMessage((message) => {
     if (message.command === 'saveAsExcel')
       saveContentToFile(message.content, fileName, fsPath)
   })
 }
 
-function getWebviewContent(context: vscode.ExtensionContext, panel: vscode.WebviewPanel, type: 'sheets' | 'docs', excelBuffer?: Uint8Array) {
+function getWebviewContent(context: ExtensionContext, panel: WebviewPanel, type: 'sheets' | 'docs', excelBuffer?: Uint8Array) {
   const targetFile = type === 'sheets' ? 'sheets' : 'docs'
   const webview = panel.webview
-  const mainCssPath = vscode.Uri.joinPath(
+  const mainCssPath = Uri.joinPath(
     context.extensionUri,
     'media',
     targetFile,
     'main.css',
   )
 
-  const mainJsPath = vscode.Uri.joinPath(
+  const mainJsPath = Uri.joinPath(
     context.extensionUri,
     'media',
     targetFile,
     'main.js',
   )
 
-  const wasmJsPath = vscode.Uri.joinPath(
+  const wasmJsPath = Uri.joinPath(
     context.extensionUri,
     'media',
     'sheets',
     'wasm.js',
   )
 
-  const faviconPath = vscode.Uri.joinPath(
+  const faviconPath = Uri.joinPath(
     context.extensionUri,
     'media',
     'favicon.svg',
@@ -215,3 +206,8 @@ function getWebviewContent(context: vscode.ExtensionContext, panel: vscode.Webvi
 }
 
 export function deactivate() { }
+
+function getViewColumn(): ViewColumn {
+  const active = window.activeTextEditor
+  return active ? active.viewColumn! : ViewColumn.One
+}
